@@ -10,11 +10,23 @@ def dust_collector(model: Model):
     return dust[0]
 
 
+def clean_percent_collector(model: Model):
+    return model.percentage_dirty_cells()
+
+
+def get_agent_dust(model: Model):
+    return 0
+
+
 class VacuumModel(Model):
-    def __init__(self, M, N, num_agents, dirty_percentage):
+    def __init__(self, M, N, num_agents, dirty_percentage, max_time):
         self.num_agents = num_agents
+        self.M = M
+        self.N = N
         self.grid = MultiGrid(M, N, torus=False)
         self.schedule = SimultaneousActivation(self)
+        self.max_time = max_time
+
         self.running = True
         behaviors = ["random", "bfs", "djikstra", "random_dust"]
 
@@ -30,8 +42,6 @@ class VacuumModel(Model):
             y = random.randint(0, self.grid.height - 1)
             self.grid.place_agent(agent, (1, 1))
             self.schedule.add(agent)
-            
-            
         
         # Add dirt agents (representing dirty cells)
         self.dirty_cells = set()
@@ -45,11 +55,24 @@ class VacuumModel(Model):
 
         
         self.datacollector = DataCollector(
-            model_reporters={"Dust": dust_collector }
+            model_reporters={"Dust": dust_collector, 
+                             "CleanPercentage": clean_percent_collector },
+            agent_reporters={ "agent_dust" : lambda l: l.dust, "agent_moves": lambda l: l.movements }
         )
 
 
+    def percentage_dirty_cells(self):
+        amount_dirty = len(self.dirty_cells)
+        return 1 - float(amount_dirty) / self.grid.num_cells
+
+
     def step(self):
+        if (self.schedule.time >= self.max_time - 2):
+            self.running = False
+            return
+        
+        print(self.datacollector.get_agent_vars_dataframe())
+        
         self.datacollector.collect(self)
         self.schedule.step()
 
