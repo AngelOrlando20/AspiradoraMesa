@@ -16,12 +16,22 @@ class VacuumModel(Model):
         self.grid = MultiGrid(M, N, torus=False)
         self.schedule = SimultaneousActivation(self)
         self.running = True
+        behaviors = ["random", "bfs", "djikstra", "random_dust"]
+
         
         # Add vacuum agents
         for i in range(self.num_agents):
-            agent = LukeAgent(i, self)
+            # Seleccionar un comportamiento aleatorio para cada agente
+            metodo = random.choice(behaviors)
+            agent = LukeAgent(i, self, metodo=metodo)
+            
+            # Asignar una posición aleatoria en la cuadrícula
+            x = random.randint(0, self.grid.width - 1)
+            y = random.randint(0, self.grid.height - 1)
             self.grid.place_agent(agent, (1, 1))
             self.schedule.add(agent)
+            
+            
         
         # Add dirt agents (representing dirty cells)
         self.dirty_cells = set()

@@ -9,15 +9,12 @@ class DirtAgent(Agent):
 
 
 class LukeAgent(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, metodo="random"):
         super().__init__(unique_id, model)
         self.movements = 0
         self.dust = 0
-
-        self.metodo = "djikstra"
-        # Variable para algoritmo: random with memory.
+        self.metodo = metodo  # Define el comportamiento del agente
         self.memory = []
-        # Variable para algoritmo: snake.
         self.direction = (0, 1)
         self.path = []
 
@@ -30,8 +27,9 @@ class LukeAgent(Agent):
                 self.model.grid.remove_agent(obj)
                 self.model.clean_cell(self.pos)
                 self.dust += 1
-        
-        if len(self.path) == 0:
+
+        # Determinar el camino basado en el método especificado para este agente
+        if not self.path:  # Solo recalcula si path está vacío
             if self.metodo == "bfs":
                 self.path = self.bfs()
             elif self.metodo == "djikstra":
@@ -40,8 +38,12 @@ class LukeAgent(Agent):
                 self.path = self.dirt_directed_move()
             elif self.metodo == "random":
                 self.path = self.randomStep()
+        
+        # Asegúrate de que path no sea None o esté vacío antes de seguir el camino
+        if self.path:
+            self.follow_path()
 
-        self.follow_path()
+
 
 
     def randomStep(self):
@@ -129,3 +131,6 @@ class LukeAgent(Agent):
         next_position = self.path.pop(0)
         self.model.grid.move_agent(self, next_position)
         self.movements += 1
+        
+        
+        
